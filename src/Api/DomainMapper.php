@@ -414,6 +414,35 @@ class DomainMapper
       return $site_pages;
    }
 
+   private function hydrate($mapping_ids, $site_ids, $domains, $site_page_ids)
+   {
+      $length = count($mapping_ids);
+      $data   = [];
+      
+      /**
+       * store the form variables in a stack. 
+       * 
+       * items with a mapping_id > 0 should be on top of the stack
+       * so we don't get a database error when we do an insert and delete (when a domain name is transferred to a different site)
+       */
+      for($index = 0; $index < $length; $index++)
+      {
+         $mapping_id = $mapping_ids[$index];
+         $site_id    = $site_ids[$index];
+         $key        = $mapping_id . "_" . $site_id;
+         $data[$key] = [
+            "index"        => $index,
+            "mapping_id"   => $mapping_id,
+            "site_id"      => $site_id,
+            "domain"       => strtolower(trim(preg_replace("#http?s://#", "", $domains[$index]))),
+            "site_page_id" => $site_page_ids[$index]
+         ];
+      }
+
+      krsort($data);
+      return array_values($data);
+   }
+
    public function __construct(MvcEvent $event)
    {
       $this->event         = $event;
@@ -467,16 +496,18 @@ class DomainMapper
       $domains       = $request->getPost("domain");
       $site_page_ids = $request->getPost("site_page_id");
       $this->errors  = [];
-      $length        = count($mapping_ids);
       $domainExists  = false;
-
+      $data          = $this->hydrate($mapping_ids, $site_ids, $domains, $site_page_ids);
+      $length        = count($data);
+      
       for($index = 0; $index < $length; $index++)
       {
-         $errorKey     = $index;
-         $mapping_id   = $mapping_ids[$index];
-         $site_id      = $site_ids[$index];
-         $domain       = strtolower(trim(preg_replace("#http?s://#", "", $domains[$index])));
-         $site_page_id = $site_page_ids[$index];
+         $row          = $data[$index];
+         $errorKey     = $row["index"];
+         $mapping_id   = $row["mapping_id"];
+         $site_id      = $row["site_id"];
+         $domain       = $row["domain"];
+         $site_page_id = $row["site_page_id"];
 
          if(strlen($site_page_id) == 0)
          {
@@ -498,15 +529,16 @@ class DomainMapper
 
             for($i = $index + 1; $i < $length; $i++)
             {
-               $currDomain = strtolower($domains[$index]);
-               $nextDomain = strtolower($domains[$i]);
+               $currDomain = strtolower($data[$index]["domain"]);
+               $nextDomain = strtolower($data[$i]["domain"]);
                
-               if($nextDomain == $currDomain)
+               if((strlen($currDomain) > 0 && strlen($nextDomain) > 0) && ($nextDomain == $currDomain))
                {
+                  $errorKey     = $data[$i]["index"];
                   $domainExists = true;
-                  $this->errors[$i] = [
-                     "error_message" => "{$domain} is already mapped to a site.",
-                     "error_value"   => $domain
+                  $this->errors[$errorKey] = [
+                     "error_message" => "{$nextDomain} is already mapped to a site.",
+                     "error_value"   => $nextDomain
                   ];
                   break;
                }
