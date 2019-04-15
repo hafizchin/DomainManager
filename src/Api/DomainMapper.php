@@ -314,7 +314,6 @@ class DomainMapper
    {
       if($this->router->hasRoute($this->siteSlug) === false)
       {
-         $routeKey = "{$this->siteSlug}-routes";
          $this->routes[$this->siteSlug] = $this->routeTemplate();
          $this->router->addRoutes($this->routes[$this->siteSlug]);
       }
@@ -324,13 +323,13 @@ class DomainMapper
          $this->redirectUrl = trim(preg_replace("#{$this->siteIndicator}|{$this->siteSlug}#", "", $this->url), "/");
       }
 
-      $routeExists = false;
-      $routeMatch  = $this->router->match($this->event->getRequest());
+      $doRedirect = true;
+      $routeMatch = $this->router->match($this->event->getRequest());
       
       if(!is_null($routeMatch))
       {
-         $routeName   = $routeMatch->getMatchedRouteName();
-         $routeExists = true;
+         $routeName  = $routeMatch->getMatchedRouteName();
+         $doRedirect = false;
             
          /**
           * route exists however it is the default omeka route and not the domain specific route
@@ -339,12 +338,12 @@ class DomainMapper
          
          if($isOmekaDefaultRoute)
          {
-            $routeExists = false;
+            $doRedirect = true;
          }
 
          if($this->isDefaultPageRoute())
          {
-            $routeExists       = false;
+            $doRedirect        = true;
             $this->redirectUrl = "/";
          }
 
@@ -356,7 +355,7 @@ class DomainMapper
             $this->redirectUrl = $this->redirectUrl . "?" . $this->query;
          }
 
-         if(strlen($this->redirectUrl) > 0 && !$routeExists)
+         if(strlen($this->redirectUrl) > 0 && $doRedirect)
          {
             $this->event->getApplication()->getEventManager()->getSharedManager()->attach(
                'Zend\Mvc\Controller\AbstractActionController', 
