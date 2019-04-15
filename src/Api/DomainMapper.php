@@ -4,7 +4,6 @@ namespace OmekaSDomainManager\Api;
 
 use Zend\Mvc\Application;
 use Zend\Mvc\MvcEvent;
-use Zend\ServiceManager\ServiceLocatorInterface;
 use Zend\Mvc\Controller\AbstractController;
 use Zend\View\Model\ViewModel;
 use Zend\View\Renderer\PhpRenderer;
