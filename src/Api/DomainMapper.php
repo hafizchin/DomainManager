@@ -173,7 +173,7 @@ class DomainMapper
       /**
        * the controller must be atleast 3 characters long so we don't match the site route ("/s/")
        */
-      $controllerContraints = '([a-zA-Z][a-zA-Z0-9_-]*){3,}'; //
+      $controllerContraints = '([a-zA-Z][a-zA-Z0-9_-]*){3,}';
       
       return [
          $routeKey => [
