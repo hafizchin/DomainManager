@@ -3,6 +3,6 @@
 
 This plugin allows Omeka S users to map a site to a domain.
 
-| Omeka S                                         | Domain Mapper                      | 
+| Omeka S                                         | Domain Manager                     | 
 | :---------------------------------------------- | :--------------------------------- | 
 | www.yourdomain.com/s/site-slug/page/page-name   | www.yourdomain.com/page/page-name  | 
