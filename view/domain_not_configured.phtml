@@ -1,0 +1,35 @@
+<?php
+    $this->headMeta()->setCharset('utf-8');
+    $this->headMeta()->appendName('viewport', 'width=device-width, initial-scale=1');
+    $this->headLink()->prependStylesheet('//fonts.googleapis.com/css?family=Source+Code+Pro|Lato:400,400italic,700,700italic');
+    $this->headTitle($this->setting('installation_title', 'Omeka S') . " | Error")->setSeparator(' · ');
+    $this->headLink()->appendStylesheet($this->assetUrl('css/iconfonts.css', 'Omeka'));
+    $this->headLink()->appendStylesheet($this->assetUrl('css/style.css', 'Omeka'));
+    $this->headScript()->prependFile($this->assetUrl('vendor/jquery/jquery.min.js', 'Omeka'));
+    $this->headScript()->appendFile($this->assetUrl('js/global.js', 'Omeka'));
+    $this->trigger('view.layout');
+?>
+<?php echo $this->doctype(); ?>
+<?php echo $this->htmlElement('html')->setAttribute('lang', $this->lang()); ?>
+    <head>
+        <?php echo $this->headMeta(); ?>
+        <?php echo $this->headTitle(); ?>
+        <?php echo $this->headLink(); ?>
+        <?php echo $this->headStyle(); ?>
+        <?php echo $this->headScript(); ?>
+    </head>
+    <?php echo $this->htmlElement('body')->appendAttribute('class', 'minimal'); ?>
+        <div id="content" role="main">
+            <div style="text-align:center;width:100%;padding:100px 0;">
+                <div style="font-size:100px">Oops!</div>
+                <div style="margin-top:100px">
+                    <h1>It looks like <label style="color:#A91818;font-weight:bold"><?=$this->domain?></label> is not mapped to a site.</h1>
+                    Click <a href="//<?=$this->domain?>/admin/module/configure?id=OmekaSDomainManager">here</a> to configure the site.
+                </div>
+            </div>
+        </div>
+        <footer>
+            <span class="powered-by"><?php echo $this->translate('Powered by Omeka S'); ?></span>
+        </footer>
+    </body>
+</html>

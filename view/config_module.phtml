@@ -1,0 +1,104 @@
+<style>
+    table {
+        width: 100%;
+    }
+
+    td, th {
+        border: 1px solid rgba(0,0,0,0.08);
+        text-align: left;
+        padding: 8px;
+    }
+
+    th {
+        background-color:rgba(0,0,0,0.08);
+    }
+
+    tr:nth-child(even) {
+        background-color: rgba(0,0,0,0.08);
+    }
+
+    input[type="text"].error {
+        box-shadow: 0 0 2px 2px #A91919;
+    }
+
+    label.error, li.error {
+        color: #A91919;
+    }
+
+    .inputs {
+        width:100% !important;
+    }
+</style>
+
+<h1>Domain - Site Mapping</h1>
+<p>
+    Server Configuration:
+    <ul style="margin-top:-20px">
+        <li>Apache - the domain must be the <b>ServerName</b> or <b>ServerAlias</b></li>
+        <li>Nginx - the domain must be the <b>server_name</b></li>
+        <li>ServerName, ServerAlias and server_name must point to omeka-s' installation directory</li>
+    </ul>
+</p>
+<?php if(count($this->errors) > 0):?>
+    <label class="error">The following errors were encountered:</label>
+    <ul style="margin-top:0px">
+        <?php foreach($this->errors as $error):?>
+            <li class="error"><?=$error["error_message"]?></li>
+        <?php endforeach?>
+    </ul>
+<?php endif?>
+<form>
+    <table>
+        <thead>
+            <tr>
+                <th>Site</th>
+                <th>Domain</th>
+                <th>Default Page</th>
+            </th>
+        </thead>
+        <tbody>
+            <?php foreach($this->mappings as $index => $mapping):?>
+                <?php 
+                    $mapping_id   = $mapping["mapping_id"];
+                    $site_id      = $mapping["site_id"];
+                    $site_page_id = $mapping["site_page_id"];
+                ?> 
+                <tr>
+                    <td><?=$mapping["site_title"]?></td>
+                    <td>
+                        <input name="mapping_id[]" type="hidden" value="<?=is_null($mapping_id) ? 0 : $mapping_id?>">
+                        <input name="site_id[]" type="hidden" value="<?=$site_id?>">
+                        <div class="inputs">
+                            <?php
+                                if(isset($this->errors[$index]))
+                                {
+                                    $domain = $this->errors[$index]["error_value"];
+                                    $class  = 'class="error"';
+                                }
+                                else
+                                {
+                                    $domain = $mapping["domain"];
+                                    $class  = "";
+                                }
+                            ?>
+                            <input name="domain[]" type="text" autocomplete="off" value="<?=$domain?>" <?=$class?>>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="inputs">
+                            <select name="site_page_id[]">
+                                <option value="">Default (Browse Items)</option>
+                                <?php foreach($this->site_pages[$site_id] as $site_page):?>
+                                    <?php
+                                        $selected = $site_page["site_page_id"] == $site_page_id ? "selected" : ""
+                                    ?>
+                                    <option value="<?=$site_page["site_page_id"]?>" <?=$selected?>><?=$site_page["site_page_title"]?></option>
+                                <?php endforeach?>
+                            </select>
+                        </div>
+                    </td>
+                </tr>
+            <?php endforeach?>
+        <tbody>
+    </table>
+</form>
