@@ -125,7 +125,7 @@ class DomainMapper
          '__SITE__'      => true,
       ];
 
-      if(is_null($this->getDefaultPage()))
+      if(is_null($this->defaultPage))
       {
          /**
           * set the default route to browse item
@@ -158,7 +158,7 @@ class DomainMapper
                'controller' => 'Page',
                'action'     => 'show',
                'site-slug'  => $this->siteSlug,
-               'page-slug'  => $this->getDefaultPage()
+               'page-slug'  => $this->defaultPage
             ]
          );
 
@@ -166,7 +166,7 @@ class DomainMapper
             'controller' => 'Page',
             'action'     => 'show',
             'site-slug'  => $this->siteSlug,
-            'page-slug'  => $this->getDefaultPage()
+            'page-slug'  => $this->defaultPage
          ];
       }
 
@@ -270,7 +270,7 @@ class DomainMapper
    private function getSiteSlug()
    {
       $slug = $this->entityManager->createQueryBuilder()
-         ->select("s")
+         ->select("s.slug")
          ->from("OmekaSDomainManager\Entity\DomainSiteMapping", "m")
          ->leftJoin("Omeka\Entity\Site", "s", \Doctrine\ORM\Query\Expr\Join::WITH, "m.site_id = s.id")
          ->where("m.domain = ?1")
@@ -324,7 +324,7 @@ class DomainMapper
 
       $doRedirect = true;
       $routeMatch = $this->router->match($this->event->getRequest());
-      
+     
       if(!is_null($routeMatch))
       {
          $routeName  = $routeMatch->getMatchedRouteName();
