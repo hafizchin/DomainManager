@@ -89,7 +89,7 @@ class DomainMapper
          ->getQuery()
          ->getArrayResult();
       
-      return count($isSitePrivate) > 0 ? (bool) !$isSitePrivate[0]["isPublic"] : null;
+      return count($isSitePrivate) > 0 ? (bool) $isSitePrivate[0]["isPublic"] : null;
    }
 
    private function isDefaultPageRoute()
