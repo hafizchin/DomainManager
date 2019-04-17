@@ -434,11 +434,11 @@ class DomainMapper
             "index"        => $index,
             "mapping_id"   => $mapping_id,
             "site_id"      => $site_id,
-            "domain"       => strtolower(trim(preg_replace("#http?s://#", "", $domains[$index]))),
+            "domain"       => strtolower(trim(preg_replace("#(https?://|\/$)#", "", $domains[$index]))),
             "site_page_id" => $site_page_ids[$index]
          ];
       }
-
+      
       krsort($data);
       return array_values($data);
    }
