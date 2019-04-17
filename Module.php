@@ -44,7 +44,7 @@ class Module extends AbstractModule
             CREATE TABLE `domain_site_mapping` (
                 `id` INT NOT NULL AUTO_INCREMENT,
                 `site_id` INT NOT NULL,
-                `domain` VARCHAR(253) NOT NULL,
+                `domain` VARCHAR(100) NOT NULL,
                 `site_page_id` INT NULL DEFAULT NULL,
                 PRIMARY KEY (`id`),
                 UNIQUE INDEX `DOMAIN_SITE_MAPPING_SITE_ID_UNIQUE` (`site_id` ASC),
