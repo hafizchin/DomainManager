@@ -274,7 +274,10 @@ class DomainMapper
                   /**
                    * we will assume that the default controller is called Index
                    */
-                  $childRouteArray["options"]["defaults"]["controller"] = "Index";
+                  if (!isset($childRouteArray["options"]["defaults"]["controller"]))
+                  {
+                     $childRouteArray["options"]["defaults"]["controller"] = "Index";
+                  }
                   
                   $childRouteArray["options"]["defaults"]["site-slug"]  = $this->siteSlug;
 
