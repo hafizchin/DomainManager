@@ -109,10 +109,10 @@ class DomainMapper
 
    private function routeTemplate()
    {
-       /**
-        * hopefully omeka-s' routing won't change
-        * this is a modified version of omeka-s' original route in application/config/routes.config.php
-        */
+      /**
+       * hopefully omeka-s' routing won't change
+       * this is a modified version of omeka-s' original route in application/config/routes.config.php
+       */
       $routeKey = "{$this->siteSlug}-routes";
       
       /**
@@ -133,8 +133,6 @@ class DomainMapper
           $rootRouteDefaults = array_merge(
             $rootRouteDefaults, 
             [
-               #'controller' => 'Index',
-               #'action'     => 'index',
                'controller' => 'Item',
                'action'     => 'browse',
                'site-slug'  => $this->siteSlug
@@ -175,7 +173,10 @@ class DomainMapper
        */
       $controllerContraints = '([a-zA-Z][a-zA-Z0-9_-]*){3,}';
       
-      return [
+      /**
+       * override omeka routes
+       */
+      $mappedRoutes = [
          $routeKey => [
             'type' => $routeType,
             'options' => [
@@ -223,7 +224,7 @@ class DomainMapper
                      ],
                   ],
                ],
-               'item-set-id' => [
+               'item-set' => [
                   'type' => \Zend\Router\Http\Segment::class,
                   'options' => [
                      'route' => 'item-set/:item-set-id',
@@ -251,6 +252,43 @@ class DomainMapper
             ]
          ]
       ];
+
+      /**
+       * mapped all existing routes to the domain
+       */
+      foreach($this->event->getApplication()->getServiceManager()->get("config")["router"]["routes"] as $mainRouteKey => $mainRouteArray)
+      {
+         if(in_array($mainRouteKey, ["top", "site"]))
+         {
+            if($mainRouteKey != "top")
+            {
+               foreach($mainRouteArray["child_routes"] as $childRouteKey => $childRouteArray)
+               {
+                  if(isset($mappedRoutes[$routeKey]["child_routes"][$childRouteKey]))
+                  {
+                     continue;
+                  }
+                  
+                  $childRouteArray["options"]["route"] = substr($childRouteArray["options"]["route"], 1);
+
+                  /**
+                   * we will assume that the default controller is called Index
+                   */
+                  $childRouteArray["options"]["defaults"]["controller"] = "Index";
+                  
+                  $childRouteArray["options"]["defaults"]["site-slug"]  = $this->siteSlug;
+
+                  if(isset($childRouteArray["options"]["constraints"]) && stripos($childRouteArray["options"]["route"], ":controller") !== false)
+                  {
+                     $childRouteArray["options"]["constraints"]["controller"] = $controllerContraints;
+                  }
+
+                  $mappedRoutes[$routeKey]["child_routes"][$childRouteKey] = $childRouteArray;
+               }
+            }
+         }
+      }
+      return $mappedRoutes;
    }
 
    private function getSiteId()
@@ -324,7 +362,7 @@ class DomainMapper
 
       $doRedirect = true;
       $routeMatch = $this->router->match($this->event->getRequest());
-     
+
       if(!is_null($routeMatch))
       {
          $routeName  = $routeMatch->getMatchedRouteName();
