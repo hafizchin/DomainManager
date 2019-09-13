@@ -340,11 +340,6 @@ class DomainMapper
             }
 
             $mappedRoutes[$routeKey]["child_routes"][$routeName] = $newRoute;
-
-            #echo "<pre>";
-            #print_r($newRoute);
-            #echo "</pre>";
-            #die();
          }
       }
       return $mappedRoutes;
