@@ -109,10 +109,6 @@ class DomainMapper
 
    private function routeTemplate()
    {
-      /**
-       * hopefully omeka-s' routing won't change
-       * this is a modified version of omeka-s' original route in application/config/routes.config.php
-       */
       $routeKey = "{$this->siteSlug}-routes";
       
       /**
@@ -174,7 +170,8 @@ class DomainMapper
       $controllerContraints = '([a-zA-Z][a-zA-Z0-9_-]*){3,}';
       
       /**
-       * override omeka routes
+       * hopefully omeka-s' routing won't change
+       * this is a modified version of omeka-s' original route in application/config/routes.config.php
        */
       $mappedRoutes = [
          $routeKey => [
@@ -254,7 +251,7 @@ class DomainMapper
       ];
 
       /**
-       * mapped all existing routes to the domain
+       * map all existing routes to the domain (defined by the config files)
        */
       foreach($this->event->getApplication()->getServiceManager()->get("config")["router"]["routes"] as $mainRouteKey => $mainRouteArray)
       {
@@ -289,6 +286,50 @@ class DomainMapper
                   $mappedRoutes[$routeKey]["child_routes"][$childRouteKey] = $childRouteArray;
                }
             }
+         }
+      }
+
+      /**
+       * map all dynamically created routes to the domain
+       */
+      foreach($this->router->getRoutes() as $routeName => $route)
+      {
+         if(!in_array($routeName, array_merge(["top", "site"], $this->ignoredRoutes)))
+         {
+            $routeArray = array();
+
+            foreach((array) $route as $k => $v)
+            {
+               $routeArray[preg_replace("#\W#i", "", $k)] = $v;
+            }
+
+            /**
+             * build the route
+             */
+            $routePath = "";
+            foreach($routeArray["parts"] as $part)
+            {
+               list($type, $path) = $part;
+
+               if(!in_array($path, [$this->siteIndicator, "site-slug"]))
+               {
+                  if($type == "parameter")
+                  {
+                     $path = ":" . $path;
+                  }
+                  $routePath .= $path;
+               }
+            }
+
+            $newRoute = array(
+               "type"    => strtolower(substr(get_class($route), strripos(get_class($route), "\\") + 1)),
+               "options" => array(
+                  "route"    => substr($routePath, 1),
+                  "defaults" => $routeArray["defaults"]
+               )
+            );
+
+            $mappedRoutes[$routeKey]["child_routes"][$routeName] = $newRoute;
          }
       }
       return $mappedRoutes;
