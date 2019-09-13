@@ -3,13 +3,10 @@
 namespace OmekaSDomainManager;
 
 use OmekaSDomainManager\Api\DomainMapper;
-
 use Omeka\Module\AbstractModule;
 use Zend\Mvc\MvcEvent;
 use Zend\ServiceManager\ServiceLocatorInterface;
-
 use Zend\Mvc\Controller\AbstractController;
-
 use Zend\View\Renderer\PhpRenderer;
 
 class Module extends AbstractModule
@@ -18,6 +15,7 @@ class Module extends AbstractModule
 
     public function onBootstrap(MvcEvent $event)
     {
+        parent::onBootstrap($event);
         $this->domainMapper = new DomainMapper($event);
         $this->domainMapper->init();
     }
