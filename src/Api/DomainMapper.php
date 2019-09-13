@@ -304,7 +304,7 @@ class DomainMapper
             }
 
             /**
-             * build the route
+             * build the route url
              */
             $routePath = "";
             if(isset($routeArray["parts"]))
@@ -315,33 +315,42 @@ class DomainMapper
    
                   if(!in_array($path, [$this->siteIndicator, "site-slug"]))
                   {
+
                      if($type == "parameter")
                      {
                         $path = ":" . $path;
                      }
+
                      $routePath .= $path;
                   }
                }
             }
 
-            $newRoute = array(
-               "type" => strtolower(substr(get_class($route), strripos(get_class($route), "\\") + 1)),
-            );
-
-            if(strlen($routePath))
+            /**
+             * ignore admin routes
+             */
+            if(stripos($routePath, "admin") === false)
             {
-               $newRoute["options"]["route"] = substr($routePath, 1);
+               $newRoute = array(
+                  "type" => strtolower(substr(get_class($route), strripos(get_class($route), "\\") + 1)),
+               );
+   
+               if(strlen($routePath))
+               {
+                  $newRoute["options"]["route"] = substr($routePath, 1);
+               }
+   
+               if(isset($routeArray["defaults"]))
+               {
+                  $routeArray["defaults"]["site-slug"] = $this->siteSlug;
+                  $newRoute["options"]["defaults"] = $routeArray["defaults"];
+               }
+   
+               $mappedRoutes[$routeKey]["child_routes"][$routeName] = $newRoute;
             }
-
-            if(isset($routeArray["defaults"]))
-            {
-               $routeArray["defaults"]["site-slug"] = $this->siteSlug;
-               $newRoute["options"]["defaults"] = $routeArray["defaults"];
-            }
-
-            $mappedRoutes[$routeKey]["child_routes"][$routeName] = $newRoute;
          }
       }
+      
       return $mappedRoutes;
    }
 
@@ -421,7 +430,7 @@ class DomainMapper
       {
          $routeName  = $routeMatch->getMatchedRouteName();
          $doRedirect = false;
-            
+
          /**
           * route exists however it is the default omeka route and not the domain specific route
           */
