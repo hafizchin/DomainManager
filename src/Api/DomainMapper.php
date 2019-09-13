@@ -307,29 +307,44 @@ class DomainMapper
              * build the route
              */
             $routePath = "";
-            foreach($routeArray["parts"] as $part)
+            if(isset($routeArray["parts"]))
             {
-               list($type, $path) = $part;
-
-               if(!in_array($path, [$this->siteIndicator, "site-slug"]))
+               foreach($routeArray["parts"] as $part)
                {
-                  if($type == "parameter")
+                  list($type, $path) = $part;
+   
+                  if(!in_array($path, [$this->siteIndicator, "site-slug"]))
                   {
-                     $path = ":" . $path;
+                     if($type == "parameter")
+                     {
+                        $path = ":" . $path;
+                     }
+                     $routePath .= $path;
                   }
-                  $routePath .= $path;
                }
             }
 
             $newRoute = array(
-               "type"    => strtolower(substr(get_class($route), strripos(get_class($route), "\\") + 1)),
-               "options" => array(
-                  "route"    => substr($routePath, 1),
-                  "defaults" => $routeArray["defaults"]
-               )
+               "type" => strtolower(substr(get_class($route), strripos(get_class($route), "\\") + 1)),
             );
 
+            if(strlen($routePath))
+            {
+               $newRoute["options"]["route"] = substr($routePath, 1);
+            }
+
+            if(isset($routeArray["defaults"]))
+            {
+               $routeArray["defaults"]["site-slug"] = $this->siteSlug;
+               $newRoute["options"]["defaults"] = $routeArray["defaults"];
+            }
+
             $mappedRoutes[$routeKey]["child_routes"][$routeName] = $newRoute;
+
+            #echo "<pre>";
+            #print_r($newRoute);
+            #echo "</pre>";
+            #die();
          }
       }
       return $mappedRoutes;
@@ -406,6 +421,10 @@ class DomainMapper
 
       $doRedirect = true;
       $routeMatch = $this->router->match($this->event->getRequest());
+
+      #echo "<pre>";
+      #print_r($routeMatch);
+      #die("</pre>");
 
       if(!is_null($routeMatch))
       {
