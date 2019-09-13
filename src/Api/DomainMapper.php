@@ -422,10 +422,6 @@ class DomainMapper
       $doRedirect = true;
       $routeMatch = $this->router->match($this->event->getRequest());
 
-      #echo "<pre>";
-      #print_r($routeMatch);
-      #die("</pre>");
-
       if(!is_null($routeMatch))
       {
          $routeName  = $routeMatch->getMatchedRouteName();
