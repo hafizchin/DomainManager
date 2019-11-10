@@ -250,30 +250,28 @@ class DomainMapper
          * map all existing routes to the domain (defined by the config files)
          */
         foreach ($this->event->getApplication()->getServiceManager()->get('config')['router']['routes'] as $mainRouteKey => $mainRouteArray) {
-            if (in_array($mainRouteKey, ['top', 'site'])) {
-                if ($mainRouteKey != 'top') {
-                    foreach ($mainRouteArray['child_routes'] as $childRouteKey => $childRouteArray) {
-                        if (isset($mappedRoutes[$routeKey]['child_routes'][$childRouteKey])) {
-                            continue;
-                        }
-
-                        $childRouteArray['options']['route'] = substr($childRouteArray['options']['route'], 1);
-
-                        /*
-                         * we will assume that the default controller is called Index
-                         */
-                        if (!isset($childRouteArray['options']['defaults']['controller'])) {
-                            $childRouteArray['options']['defaults']['controller'] = 'Index';
-                        }
-
-                        $childRouteArray['options']['defaults']['site-slug'] = $this->siteSlug;
-
-                        if (isset($childRouteArray['options']['constraints']) && stripos($childRouteArray['options']['route'], ':controller') !== false) {
-                            $childRouteArray['options']['constraints']['controller'] = $controllerContraints;
-                        }
-
-                        $mappedRoutes[$routeKey]['child_routes'][$childRouteKey] = $childRouteArray;
+            if ($mainRouteKey === 'site') {
+                foreach ($mainRouteArray['child_routes'] as $childRouteKey => $childRouteArray) {
+                    if (isset($mappedRoutes[$routeKey]['child_routes'][$childRouteKey])) {
+                        continue;
                     }
+
+                    $childRouteArray['options']['route'] = substr($childRouteArray['options']['route'], 1);
+
+                    /*
+                     * we will assume that the default controller is called Index
+                     */
+                    if (!isset($childRouteArray['options']['defaults']['controller'])) {
+                        $childRouteArray['options']['defaults']['controller'] = 'Index';
+                    }
+
+                    $childRouteArray['options']['defaults']['site-slug'] = $this->siteSlug;
+
+                    if (isset($childRouteArray['options']['constraints']) && stripos($childRouteArray['options']['route'], ':controller') !== false) {
+                        $childRouteArray['options']['constraints']['controller'] = $controllerContraints;
+                    }
+
+                    $mappedRoutes[$routeKey]['child_routes'][$childRouteKey] = $childRouteArray;
                 }
             }
         }
