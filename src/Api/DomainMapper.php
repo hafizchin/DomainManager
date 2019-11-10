@@ -259,37 +259,42 @@ class DomainMapper
         ];
 
         /*
-         * map all dynamically created routes to the domain
+         * Map all statically and dynamically created routes to the domain.
          */
-        foreach ($this->router->getRoutes() as $routeName => $route) {
-            if (!in_array($routeName, array_merge(['top', 'site'], $this->ignoredRoutes))) {
-                $routeArray = [];
+        $ignoredRoutes = array_merge(['top', 'site'], $this->ignoredRoutes);
 
-                foreach ((array) $route as $k => $v) {
-                    $routeArray[preg_replace('#\W#i', '', $k)] = $v;
-                }
+        /**
+         * @var \Zend\Router\PriorityList $routes
+         * @var \Zend\Router\RouteInterface $route
+         */
+        $routes = $this->router->getRoutes();
+        foreach ($routes as $routeName => $route) {
+            if (in_array($routeName, $ignoredRoutes)) {
+                continue;
+            }
 
-                /**
-                 * build the route url
-                 */
-                $routePath = '';
-                if (isset($routeArray['parts'])) {
-                    foreach ($routeArray['parts'] as $part) {
-                        list($type, $path) = $part;
-                        // The module Scripto use another route format, at top
-                        // level, but with optional site slug.
-                        if ($type === 'optional') {
-                            $optionalParts = $path;
-                            foreach ($optionalParts as $optionalPart) {
-                                list($type, $path) = $optionalPart;
-                                if (!in_array($path, [$this->siteIndicator, 'site-slug'])) {
-                                    if ($type == 'parameter') {
-                                        $path = ':' . $path;
-                                    }
-                                    $routePath .= $path;
-                                }
-                            }
-                        } else {
+            // The original route config is not available directly. So the cast
+            // to array allows to access to it: protected keys start with "0*0".
+            $routeArray = [];
+            foreach ((array) $route as $k => $v) {
+                $routeArray[substr($k, 3)] = $v;
+            }
+
+            /**
+             * Build the route schema.
+             */
+            $routePath = '';
+            if (isset($routeArray['parts'])) {
+                // The method assemble() is not available, because the site slug
+                // is missing.
+                foreach ($routeArray['parts'] as $part) {
+                    list($type, $path) = $part;
+                    // The module Scripto use another route format, at top
+                    // level, but with optional site slug.
+                    if ($type === 'optional') {
+                        $optionalParts = $path;
+                        foreach ($optionalParts as $optionalPart) {
+                            list($type, $path) = $optionalPart;
                             if (!in_array($path, [$this->siteIndicator, 'site-slug'])) {
                                 if ($type == 'parameter') {
                                     $path = ':' . $path;
@@ -297,29 +302,31 @@ class DomainMapper
                                 $routePath .= $path;
                             }
                         }
+                    } else {
+                        if (!in_array($path, [$this->siteIndicator, 'site-slug'])) {
+                            if ($type == 'parameter') {
+                                $path = ':' . $path;
+                            }
+                            $routePath .= $path;
+                        }
                     }
-                }
-
-                /*
-                 * ignore admin routes
-                 */
-                if (stripos($routePath, 'admin') === false) {
-                    $newRoute = [
-                        'type' => strtolower(substr(get_class($route), strripos(get_class($route), '\\') + 1)),
-                    ];
-
-                    if (strlen($routePath)) {
-                        $newRoute['options']['route'] = substr($routePath, 1);
-                    }
-
-                    if (isset($routeArray['defaults'])) {
-                        $routeArray['defaults']['site-slug'] = $this->siteSlug;
-                        $newRoute['options']['defaults'] = $routeArray['defaults'];
-                    }
-
-                    $mappedRoutes[$routeKey]['child_routes'][$routeName] = $newRoute;
                 }
             }
+
+            $newRoute = [
+                'type' => get_class($route),
+            ];
+
+            if (strlen($routePath)) {
+                $newRoute['options']['route'] = substr($routePath, 1);
+            }
+
+            if (isset($routeArray['defaults'])) {
+                $routeArray['defaults']['site-slug'] = $this->siteSlug;
+                $newRoute['options']['defaults'] = $routeArray['defaults'];
+            }
+
+            $mappedRoutes[$routeKey]['child_routes'][$routeName] = $newRoute;
         }
 
         return $mappedRoutes;
