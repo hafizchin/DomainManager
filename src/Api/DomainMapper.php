@@ -32,12 +32,16 @@ class DomainMapper
         'logout',
         'create-password',
         'forgot-password',
+        // Compatibility with modules that have a route on root.
+        // Module OAI-PMH Repository.
+        'oai-pmh',
     ];
 
     private $uri;
     private $scheme;
     private $url;
     private $query;
+    /** @var \Zend\Router\Http\TreeRouteStack $router */
     private $router;
     private $domain;
     private $siteSlug;
@@ -78,7 +82,7 @@ class DomainMapper
     {
         $matches = [];
         preg_match('#(' . implode('|', $this->ignoredRoutes) . ')#', $this->redirectUrl, $matches);
-        return count($matches) > 0 ? true : false;
+        return (bool) count($matches);
     }
 
     private function isSitePrivate()
