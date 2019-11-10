@@ -10,7 +10,7 @@ use Zend\Mvc\Controller\AbstractController;
 use Zend\View\Renderer\PhpRenderer;
 
 class Module extends AbstractModule
-{   
+{
     private $domainMapper;
 
     public function onBootstrap(MvcEvent $event)
@@ -69,21 +69,20 @@ class Module extends AbstractModule
         $sqls = [
             'ALTER TABLE domain_site_mapping DROP FOREIGN KEY FK_DOMAIN_SITE_MAPPING_SITE_ID',
             'ALTER TABLE domain_site_mapping DROP FOREIGN KEY FK_DOMAIN_SITE_MAPPING_SITE_PAGE_ID',
-            'DROP TABLE domain_site_mapping'
+            'DROP TABLE domain_site_mapping',
         ];
 
         $connection = $serviceLocator->get('Omeka\Connection');
 
-        foreach($sqls as $sql)
-        {
+        foreach ($sqls as $sql) {
             $connection->exec($sql);
         }
     }
 
-    public function upgrade($oldVersion, $newVersion, ServiceLocatorInterface $serviceLocator) 
+    public function upgrade($oldVersion, $newVersion, ServiceLocatorInterface $serviceLocator)
     {
         $connection = $serviceLocator->get('Omeka\Connection');
-        /**
+        /*
          * TODO
          */
     }
