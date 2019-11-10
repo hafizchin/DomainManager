@@ -33,6 +33,8 @@ class DomainMapper
         'create-password',
         'forgot-password',
         // Compatibility with modules that have a route on root.
+        // Module Custom Ontology.
+        'ns',
         // Module OAI-PMH Repository.
         'oai-pmh',
     ];
