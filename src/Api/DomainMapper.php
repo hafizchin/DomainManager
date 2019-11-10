@@ -297,13 +297,26 @@ class DomainMapper
                 if (isset($routeArray['parts'])) {
                     foreach ($routeArray['parts'] as $part) {
                         list($type, $path) = $part;
-
-                        if (!in_array($path, [$this->siteIndicator, 'site-slug'])) {
-                            if ($type == 'parameter') {
-                                $path = ':' . $path;
+                        // The module Scripto use another route format, at top
+                        // level, but with optional site slug.
+                        if ($type === 'optional') {
+                            $optionalParts = $path;
+                            foreach ($optionalParts as $optionalPart) {
+                                list($type, $path) = $optionalPart;
+                                if (!in_array($path, [$this->siteIndicator, 'site-slug'])) {
+                                    if ($type == 'parameter') {
+                                        $path = ':' . $path;
+                                    }
+                                    $routePath .= $path;
+                                }
                             }
-
-                            $routePath .= $path;
+                        } else {
+                            if (!in_array($path, [$this->siteIndicator, 'site-slug'])) {
+                                if ($type == 'parameter') {
+                                    $path = ':' . $path;
+                                }
+                                $routePath .= $path;
+                            }
                         }
                     }
                 }
