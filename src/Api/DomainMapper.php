@@ -11,9 +11,12 @@ use Zend\View\Renderer\PhpRenderer;
 class DomainMapper
 {
     private $event;
+    /** @var \Doctrine\ORM\EntityManager */
     private $entityManager;
     private $routes;
     private $siteIndicator = '/s/';
+
+    private $controller;
 
     /**
      * ignore these routes as they are not domain specific
@@ -482,7 +485,7 @@ class DomainMapper
         return $site_pages;
     }
 
-    private function hydrate($mapping_ids, $site_ids, $domains, $site_page_ids)
+    private function hydrate($mapping_ids, $site_ids, $domains)
     {
         $length = count($mapping_ids);
         $data = [];
@@ -502,7 +505,6 @@ class DomainMapper
                 'mapping_id' => $mapping_id,
                 'site_id' => $site_id,
                 'domain' => strtolower(trim(preg_replace('#(https?://|\/$)#', '', $domains[$index]))),
-                'site_page_id' => $site_page_ids[$index],
             ];
         }
 
@@ -553,14 +555,15 @@ class DomainMapper
 
     public function saveConfiguration(AbstractController $controller)
     {
+        $this->controller = $controller;
+
         $request = $controller->getRequest();
         $mapping_ids = $request->getPost('mapping_id');
         $site_ids = $request->getPost('site_id');
         $domains = $request->getPost('domain');
-        $site_page_ids = $request->getPost('site_page_id');
         $this->errors = [];
         $domainExists = false;
-        $data = $this->hydrate($mapping_ids, $site_ids, $domains, $site_page_ids);
+        $data = $this->hydrate($mapping_ids, $site_ids, $domains);
         $length = count($data);
 
         for ($index = 0; $index < $length; $index++) {
@@ -569,11 +572,7 @@ class DomainMapper
             $mapping_id = $row['mapping_id'];
             $site_id = $row['site_id'];
             $domain = $row['domain'];
-            $site_page_id = $row['site_page_id'];
-
-            if (strlen($site_page_id) == 0) {
-                $site_page_id = null;
-            }
+            $site_page_id = $this->getHomepage($site_id);
 
             if (strlen($domain) > 0) {
                 $validate = preg_match('#^(?!\-)(?:[a-zA-Z\d\-]{0,62}[a-zA-Z\d]\.){1,126}(?!\d+)[a-zA-Z\d]{1,63}$#', $domain);
@@ -632,5 +631,45 @@ class DomainMapper
         }
 
         return count($this->errors) == 0;
+    }
+
+    protected function getHomepage($site_id)
+    {
+        /** @var \Omeka\Entity\Site $site */
+        $site = $this->entityManager->getRepository(\Omeka\Entity\Site::class)
+            ->findOneBy([
+                'id' => $site_id,
+            ]);
+        if (empty($site)) {
+            return null;
+        }
+
+        // @see \Omeka\Controller\Site\IndexController::indexAction()
+        // Get the defined home page, if any.
+        $homepage = $site->getHomepage();
+        if ($homepage) {
+            return $homepage->getId();
+        }
+
+        // The api doesn't allow to get a site by id or a site page by slug, but
+        // is needed to get the linked pages.
+        $api = $this->controller->api();
+
+        // Get the linked home page, if any.
+        $siteRepr = $api->read('sites', ['id' => $site_id])->getContent();
+        $linkedPages = $siteRepr->linkedPages();
+        if ($linkedPages) {
+            $sitePageRepr = current($linkedPages);
+            $sitePage = $this->entityManager->getRepository(\Omeka\Entity\SitePage::class)
+                ->findOneBy([
+                    'site' => $site,
+                    'slug' => $sitePageRepr->slug(),
+                ]);
+            if ($sitePage) {
+                return $sitePage->getId();
+            }
+        }
+
+        return null;
     }
 }

@@ -39,6 +39,9 @@
         <li>ServerName, ServerAlias and server_name must point to omeka-s' installation directory</li>
     </ul>
 </p>
+<p>
+The default page is managed by the navigation menu of the site. This configuration page must be updated each time the home page is changed.
+</p>
 <?php if(count($this->errors) > 0):?>
     <label class="error">The following errors were encountered:</label>
     <ul style="margin-top:0px">
@@ -53,7 +56,6 @@
             <tr>
                 <th>Site</th>
                 <th>Domain</th>
-                <th>Default Page</th>
             </th>
         </thead>
         <tbody>
@@ -82,19 +84,6 @@
                                 }
                             ?>
                             <input name="domain[]" type="text" autocomplete="off" value="<?=$domain?>" <?=$class?>>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="inputs">
-                            <select name="site_page_id[]">
-                                <option value="">Default (Browse Items)</option>
-                                <?php foreach($this->site_pages[$site_id] as $site_page):?>
-                                    <?php
-                                        $selected = $site_page["site_page_id"] == $site_page_id ? "selected" : ""
-                                    ?>
-                                    <option value="<?=$site_page["site_page_id"]?>" <?=$selected?>><?=$site_page["site_page_title"]?></option>
-                                <?php endforeach?>
-                            </select>
                         </div>
                     </td>
                 </tr>
