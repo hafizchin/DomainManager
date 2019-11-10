@@ -1,8 +1,8 @@
 <?php
 
-namespace OmekaSDomainManager\Api;
+namespace DomainManager\Api;
 
-use OmekaSDomainManager\Entity\DomainSiteMapping;
+use DomainManager\Entity\DomainSiteMapping;
 use Zend\Mvc\Controller\AbstractController;
 use Zend\Mvc\MvcEvent;
 use Zend\View\Model\ViewModel;
@@ -71,7 +71,7 @@ class DomainMapper
     {
         $domain = $this->entityManager->createQueryBuilder()
             ->select('m.domain')
-            ->from('OmekaSDomainManager\Entity\DomainSiteMapping', 'm')
+            ->from('DomainManager\Entity\DomainSiteMapping', 'm')
             ->where('m.domain = ?1')
             ->setParameter(1, $this->domain)
             ->getQuery()
@@ -336,7 +336,7 @@ class DomainMapper
     {
         $site = $this->entityManager->createQueryBuilder()
             ->select('s.id')
-            ->from('OmekaSDomainManager\Entity\DomainSiteMapping', 'm')
+            ->from('DomainManager\Entity\DomainSiteMapping', 'm')
             ->leftJoin('Omeka\Entity\Site', 's', \Doctrine\ORM\Query\Expr\Join::WITH, 'm.site_id = s.id')
             ->where('m.domain = ?1')
             ->setParameter(1, $this->domain)
@@ -350,7 +350,7 @@ class DomainMapper
     {
         $slug = $this->entityManager->createQueryBuilder()
             ->select('s.slug')
-            ->from('OmekaSDomainManager\Entity\DomainSiteMapping', 'm')
+            ->from('DomainManager\Entity\DomainSiteMapping', 'm')
             ->leftJoin('Omeka\Entity\Site', 's', \Doctrine\ORM\Query\Expr\Join::WITH, 'm.site_id = s.id')
             ->where('m.domain = ?1')
             ->setParameter(1, $this->domain)
@@ -365,7 +365,7 @@ class DomainMapper
         $defaultPage = $this->entityManager->createQueryBuilder()
             ->select('sp.slug')
             ->from('Omeka\Entity\SitePage', 'sp')
-            ->innerJoin('OmekaSDomainManager\Entity\DomainSiteMapping', 'm', \Doctrine\ORM\Query\Expr\Join::WITH, 'sp.id = m.site_page_id')
+            ->innerJoin('DomainManager\Entity\DomainSiteMapping', 'm', \Doctrine\ORM\Query\Expr\Join::WITH, 'sp.id = m.site_page_id')
             ->where('sp.site = ?1')
             ->orderBy('sp.id', 'ASC')
             ->setParameter(1, $this->siteId)
@@ -452,7 +452,7 @@ class DomainMapper
             ->addSelect('m.domain')
             ->addSelect('m.site_page_id')
             ->from('Omeka\Entity\Site', 's')
-            ->leftJoin('OmekaSDomainManager\Entity\DomainSiteMapping', 'm', \Doctrine\ORM\Query\Expr\Join::WITH, 's.id = m.site_id')
+            ->leftJoin('DomainManager\Entity\DomainSiteMapping', 'm', \Doctrine\ORM\Query\Expr\Join::WITH, 's.id = m.site_id')
             ->orderBy('s.id', 'ASC')
             ->getQuery()
             ->getArrayResult();

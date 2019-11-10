@@ -1,8 +1,8 @@
 <?php
 
-namespace OmekaSDomainManager;
+namespace DomainManager;
 
-use OmekaSDomainManager\Api\DomainMapper;
+use DomainManager\Api\DomainMapper;
 use Omeka\Module\AbstractModule;
 use Zend\Mvc\MvcEvent;
 use Zend\ServiceManager\ServiceLocatorInterface;
@@ -57,8 +57,8 @@ class Module extends AbstractModule
                     REFERENCES `site_page` (`id`)
                     ON DELETE RESTRICT
                     ON UPDATE RESTRICT)
-            DEFAULT CHARACTER SET utf8mb4 
-            COLLATE utf8mb4_unicode_ci 
+            DEFAULT CHARACTER SET utf8mb4
+            COLLATE utf8mb4_unicode_ci
             ENGINE = InnoDB
         ';
         $connection->exec($sql);

@@ -1,6 +1,6 @@
 <?php
 
-namespace OmekaSDomainManager\Entity;
+namespace DomainManager\Entity;
 
 use Omeka\Entity\AbstractEntity;
 
