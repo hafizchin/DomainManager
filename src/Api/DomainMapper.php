@@ -240,10 +240,21 @@ class DomainMapper
                             ],
                         ],
                     ],
+                    'page-browse' => [
+                        'type' => \Zend\Router\Http\Literal::class,
+                        'options' => [
+                            'route' => 'page',
+                            'defaults' => [
+                                'controller' => 'Page',
+                                'action' => 'browse',
+                                'site-slug' => $this->siteSlug,
+                            ],
+                        ],
+                    ],
                     'page' => [
                         'type' => \Zend\Router\Http\Segment::class,
                         'options' => [
-                            'route' => 'page[/:page-slug]',
+                            'route' => 'page/:page-slug',
                             'defaults' => [
                                 'controller' => 'Page',
                                 'action' => 'show',
