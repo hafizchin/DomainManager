@@ -23,8 +23,8 @@ $this->trigger('view.layout');
             <div style="text-align:center;width:100%;padding:100px 0;">
                 <div style="font-size:100px">Oops!</div>
                 <div style="margin-top:100px">
-                    <h1>It looks like <label style="color:#A91818;font-weight:bold"><?=$this->domain?></label> is not mapped to a site.</h1>
-                    Click <a href="//<?=$this->domain?>/admin/module/configure?id=OmekaSDomainManager">here</a> to configure the site.
+                    <h1><?= sprintf($this->translate('It looks like %s is not mapped to a site.'), '<label style="color:#A91818;font-weight:bold">' . $this->domain . '</label>'); ?></h1>
+                    <p><?= sprintf($this->translate('Click %shere%s to configure the site.'), '<a href="//' . $this->domain . '/admin/module/configure?id=OmekaSDomainManager">', '</a>') ?></p>
                 </div>
             </div>
         </div>
