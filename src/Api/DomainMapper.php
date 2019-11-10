@@ -124,24 +124,18 @@ class DomainMapper
          */
         $routeType = \Zend\Router\Http\Literal::class;
         $routePath = '/';
-        $rootRouteDefaults = [
-            '__NAMESPACE__' => 'Omeka\Controller\Site',
-            '__SITE__' => true,
-        ];
 
-        if (is_null($this->defaultPage)) {
+        if (empty($this->defaultPage)) {
             /**
              * set the default route to browse item
              */
-            $rootRouteDefaults = array_merge(
-                $rootRouteDefaults,
-                [
-                    'controller' => 'Item',
-                    'action' => 'browse',
-                    'site-slug' => $this->siteSlug,
-                ]
-            );
-
+            $rootRouteDefaults = [
+                '__NAMESPACE__' => 'Omeka\Controller\Site',
+                '__SITE__' => true,
+                'controller' => 'Item',
+                'action' => 'browse',
+                'site-slug' => $this->siteSlug,
+            ];
             $defaultPageRouteDefaults = [
                 'controller' => 'Item',
                 'action' => 'browse',
@@ -151,16 +145,14 @@ class DomainMapper
             /**
              * set the default route to the default page
              */
-            $rootRouteDefaults = array_merge(
-                $rootRouteDefaults,
-                [
-                    'controller' => 'Page',
-                    'action' => 'show',
-                    'site-slug' => $this->siteSlug,
-                    'page-slug' => $this->defaultPage,
-                ]
-            );
-
+            $rootRouteDefaults = [
+                '__NAMESPACE__' => 'Omeka\Controller\Site',
+                '__SITE__' => true,
+                'controller' => 'Page',
+                'action' => 'show',
+                'site-slug' => $this->siteSlug,
+                'page-slug' => $this->defaultPage,
+            ];
             $defaultPageRouteDefaults = [
                 'controller' => 'Page',
                 'action' => 'show',
@@ -265,36 +257,6 @@ class DomainMapper
                 ],
             ],
         ];
-
-        /*
-         * map all existing routes to the domain (defined by the config files)
-         */
-        foreach ($this->event->getApplication()->getServiceManager()->get('config')['router']['routes'] as $mainRouteKey => $mainRouteArray) {
-            if ($mainRouteKey === 'site') {
-                foreach ($mainRouteArray['child_routes'] as $childRouteKey => $childRouteArray) {
-                    if (isset($mappedRoutes[$routeKey]['child_routes'][$childRouteKey])) {
-                        continue;
-                    }
-
-                    $childRouteArray['options']['route'] = substr($childRouteArray['options']['route'], 1);
-
-                    /*
-                     * we will assume that the default controller is called Index
-                     */
-                    if (!isset($childRouteArray['options']['defaults']['controller'])) {
-                        $childRouteArray['options']['defaults']['controller'] = 'Index';
-                    }
-
-                    $childRouteArray['options']['defaults']['site-slug'] = $this->siteSlug;
-
-                    if (isset($childRouteArray['options']['constraints']) && stripos($childRouteArray['options']['route'], ':controller') !== false) {
-                        $childRouteArray['options']['constraints']['controller'] = $controllerContraints;
-                    }
-
-                    $mappedRoutes[$routeKey]['child_routes'][$childRouteKey] = $childRouteArray;
-                }
-            }
-        }
 
         /*
          * map all dynamically created routes to the domain
