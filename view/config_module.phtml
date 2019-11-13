@@ -40,7 +40,7 @@
     </ul>
 </p>
 <p>
-The default page is managed by the navigation menu of the site. This configuration page must be updated each time the home page is changed.
+The default page is managed by the navigation menu of the site.
 </p>
 <?php if(count($this->errors) > 0):?>
     <label class="error">The following errors were encountered:</label>
@@ -61,9 +61,8 @@ The default page is managed by the navigation menu of the site. This configurati
         <tbody>
             <?php foreach($this->mappings as $index => $mapping):?>
                 <?php
-                    $mapping_id   = $mapping["mapping_id"];
-                    $site_id      = $mapping["site_id"];
-                    $site_page_id = $mapping["site_page_id"];
+                    $mapping_id = $mapping["mapping_id"];
+                    $site_id    = $mapping["site_id"];
                 ?>
                 <tr>
                     <td><?=$mapping["site_title"]?></td>

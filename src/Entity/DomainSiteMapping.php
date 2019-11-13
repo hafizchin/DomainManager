@@ -29,11 +29,6 @@ class DomainSiteMapping extends AbstractEntity
      */
     protected $domain;
 
-    /**
-     * @Column(type="integer", unique=true)
-     */
-    protected $site_page_id;
-
     public function getId()
     {
         return $this->id;
@@ -49,11 +44,6 @@ class DomainSiteMapping extends AbstractEntity
         return $this->domain;
     }
 
-    public function getSitePageId()
-    {
-        return $this->site_page_id;
-    }
-
     public function setSiteId($site_id)
     {
         $this->site_id = $site_id;
@@ -62,10 +52,5 @@ class DomainSiteMapping extends AbstractEntity
     public function setDomain($domain)
     {
         $this->domain = $domain;
-    }
-
-    public function setSitePageId($site_page_id)
-    {
-        $this->site_page_id = $site_page_id;
     }
 }

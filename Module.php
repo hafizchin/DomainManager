@@ -43,18 +43,12 @@ class Module extends AbstractModule
                 `id` INT NOT NULL AUTO_INCREMENT,
                 `site_id` INT NOT NULL,
                 `domain` VARCHAR(100) NOT NULL,
-                `site_page_id` INT NULL DEFAULT NULL,
                 PRIMARY KEY (`id`),
                 UNIQUE INDEX `DOMAIN_SITE_MAPPING_SITE_ID_UNIQUE` (`site_id` ASC),
                 UNIQUE INDEX `DOMAIN_SITE_MAPPING_DOMAIN_UNIQUE` (`domain` ASC),
                 CONSTRAINT `FK_DOMAIN_SITE_MAPPING_SITE_ID`
                     FOREIGN KEY (`site_id`)
                     REFERENCES `site` (`id`)
-                    ON DELETE RESTRICT
-                    ON UPDATE RESTRICT,
-                CONSTRAINT `FK_DOMAIN_SITE_MAPPING_SITE_PAGE_ID`
-                    FOREIGN KEY (`site_page_id`)
-                    REFERENCES `site_page` (`id`)
                     ON DELETE RESTRICT
                     ON UPDATE RESTRICT)
             DEFAULT CHARACTER SET utf8mb4
@@ -68,7 +62,6 @@ class Module extends AbstractModule
     {
         $sqls = [
             'ALTER TABLE domain_site_mapping DROP FOREIGN KEY FK_DOMAIN_SITE_MAPPING_SITE_ID',
-            'ALTER TABLE domain_site_mapping DROP FOREIGN KEY FK_DOMAIN_SITE_MAPPING_SITE_PAGE_ID',
             'DROP TABLE domain_site_mapping',
         ];
 
@@ -82,8 +75,16 @@ class Module extends AbstractModule
     public function upgrade($oldVersion, $newVersion, ServiceLocatorInterface $serviceLocator)
     {
         $connection = $serviceLocator->get('Omeka\Connection');
-        /*
-         * TODO
-         */
+       
+        if (version_compare($oldVersion, "1.2", "<")) {
+            if (count($connection->query("SHOW COLUMNS FROM domain_site_mapping LIKE 'site_page_id'")->fetchAll())) {
+                try {
+                    $connection->exec("ALTER TABLE domain_site_mapping DROP FOREIGN KEY FK_DOMAIN_SITE_MAPPING_SITE_PAGE_ID");
+                    $connection->exec("ALTER TABLE `domain_site_mapping` DROP `site_page_id`");
+                }
+                catch (\Exception $e) {
+                }
+            }
+        }
     }
 }

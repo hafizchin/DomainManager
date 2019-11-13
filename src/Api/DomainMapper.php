@@ -403,15 +403,19 @@ class DomainMapper
     {
         $defaultPage = $this->entityManager->createQueryBuilder()
             ->select('sp.slug')
-            ->from('Omeka\Entity\SitePage', 'sp')
-            ->innerJoin('DomainManager\Entity\DomainSiteMapping', 'm', \Doctrine\ORM\Query\Expr\Join::WITH, 'sp.id = m.site_page_id')
-            ->where('sp.site = ?1')
-            ->orderBy('sp.id', 'ASC')
+            ->from('Omeka\Entity\Site', 's')
+            ->innerJoin('Omeka\Entity\SitePage', 'sp', \Doctrine\ORM\Query\Expr\Join::WITH, 's.id = sp.site AND s.homepage = sp.id')
+            ->where('s.id = ?1')
+            ->orderBy('s.id', 'ASC')
             ->setParameter(1, $this->siteId)
             ->getQuery()
             ->getArrayResult();
-
-        return count($defaultPage) > 0 ? $defaultPage[0]['slug'] : null;
+        
+        if (count($defaultPage) > 0) {
+            return $defaultPage[0]['slug'];
+        }
+        
+        return null;
     }
 
     private function redirect(AbstractController $controller, $url)
@@ -489,38 +493,11 @@ class DomainMapper
             ->addSelect('s.title site_title')
             ->addSelect('m.id mapping_id')
             ->addSelect('m.domain')
-            ->addSelect('m.site_page_id')
             ->from('Omeka\Entity\Site', 's')
             ->leftJoin('DomainManager\Entity\DomainSiteMapping', 'm', \Doctrine\ORM\Query\Expr\Join::WITH, 's.id = m.site_id')
             ->orderBy('s.id', 'ASC')
             ->getQuery()
             ->getArrayResult();
-    }
-
-    private function getSitePages()
-    {
-        $data = $this->entityManager->createQueryBuilder()
-            ->select('s.id site_id')
-            ->addSelect('s.title site_title')
-            ->addSelect('p.id site_page_id')
-            ->addSelect('p.title site_page_title')
-            ->from('Omeka\Entity\Site', 's')
-            ->leftJoin('Omeka\Entity\SitePage', 'p', \Doctrine\ORM\Query\Expr\Join::WITH, 's = p.site')
-            ->orderBy('s.id', 'ASC')
-            ->orderBy('p.title', 'ASC')
-            ->getQuery()
-            ->getArrayResult();
-
-        $site_pages = [];
-
-        foreach ($data as $site_page) {
-            $site_pages[$site_page['site_id']][] = [
-                'site_page_id' => $site_page['site_page_id'],
-                'site_page_title' => $site_page['site_page_title'],
-            ];
-        }
-
-        return $site_pages;
     }
 
     private function hydrate($mapping_ids, $site_ids, $domains)
@@ -583,7 +560,6 @@ class DomainMapper
 
         $data = [
             'mappings' => $this->getMapping(),
-            'site_pages' => $this->getSitePages(),
             'errors' => $this->errors,
         ];
 
@@ -610,8 +586,7 @@ class DomainMapper
             $mapping_id = $row['mapping_id'];
             $site_id = $row['site_id'];
             $domain = $row['domain'];
-            $site_page_id = $this->getHomepage($site_id);
-
+            
             if (strlen($domain) > 0) {
                 $validate = preg_match('#^(?!\-)(?:[a-zA-Z\d\-]{0,62}[a-zA-Z\d]\.){1,126}(?!\d+)[a-zA-Z\d]{1,63}$#', $domain);
 
@@ -651,7 +626,6 @@ class DomainMapper
                 } else {
                     $domainSiteMapping->setSiteId($site_id);
                     $domainSiteMapping->setDomain($domain);
-                    $domainSiteMapping->setSitePageId($site_page_id);
                     $this->entityManager->persist($domainSiteMapping);
                 }
 
@@ -661,7 +635,6 @@ class DomainMapper
                     $domainSiteMapping = new DomainSiteMapping();
                     $domainSiteMapping->setSiteId($site_id);
                     $domainSiteMapping->setDomain($domain);
-                    $domainSiteMapping->setSitePageId($site_page_id);
                     $this->entityManager->persist($domainSiteMapping);
                     $this->entityManager->flush();
                 }
@@ -669,45 +642,5 @@ class DomainMapper
         }
 
         return count($this->errors) == 0;
-    }
-
-    protected function getHomepage($site_id)
-    {
-        /** @var \Omeka\Entity\Site $site */
-        $site = $this->entityManager->getRepository(\Omeka\Entity\Site::class)
-            ->findOneBy([
-                'id' => $site_id,
-            ]);
-        if (empty($site)) {
-            return null;
-        }
-
-        // @see \Omeka\Controller\Site\IndexController::indexAction()
-        // Get the defined home page, if any.
-        $homepage = $site->getHomepage();
-        if ($homepage) {
-            return $homepage->getId();
-        }
-
-        // The api doesn't allow to get a site by id or a site page by slug, but
-        // is needed to get the linked pages.
-        $api = $this->controller->api();
-
-        // Get the linked home page, if any.
-        $siteRepr = $api->read('sites', ['id' => $site_id])->getContent();
-        $linkedPages = $siteRepr->linkedPages();
-        if ($linkedPages) {
-            $sitePageRepr = current($linkedPages);
-            $sitePage = $this->entityManager->getRepository(\Omeka\Entity\SitePage::class)
-                ->findOneBy([
-                    'site' => $site,
-                    'slug' => $sitePageRepr->slug(),
-                ]);
-            if ($sitePage) {
-                return $sitePage->getId();
-            }
-        }
-
-        return null;
     }
 }
