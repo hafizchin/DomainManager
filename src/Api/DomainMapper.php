@@ -261,20 +261,55 @@ class DomainMapper
         /*
          * Map all statically and dynamically created routes to the domain.
          */
-        $ignoredRoutes = array_merge(['top', 'site'], $this->ignoredRoutes);
+       
+        /**
+         * static routes (defined by the config files)
+         */
+        foreach ($this->event->getApplication()->getServiceManager()->get("config")["router"]["routes"] as $mainRouteKey => $mainRouteArray) {
+            if (in_array($mainRouteKey, ["site"])) {
+                foreach ($mainRouteArray["child_routes"] as $childRouteKey => $childRouteArray) {
+                    if (isset($mappedRoutes[$routeKey]["child_routes"][$childRouteKey])) {
+                        continue;
+                    }
+                    
+                    $childRouteArray["options"]["route"] = substr($childRouteArray["options"]["route"], 1);
+
+                    /**
+                     * we will assume that the default controller is called Index
+                     */
+                    if (!isset($childRouteArray["options"]["defaults"]["controller"])) {
+                        $childRouteArray["options"]["defaults"]["controller"] = "Index";
+                    }
+                    
+                    $childRouteArray["options"]["defaults"]["site-slug"]  = $this->siteSlug;
+
+                    if (isset($childRouteArray["options"]["constraints"]) && stripos($childRouteArray["options"]["route"], ":controller") !== false) {
+                        $childRouteArray["options"]["constraints"]["controller"] = $controllerContraints;
+                    }
+
+                    $mappedRoutes[$routeKey]["child_routes"][$childRouteKey] = $childRouteArray;
+                }
+            }
+        }
 
         /**
          * @var \Zend\Router\PriorityList $routes
          * @var \Zend\Router\RouteInterface $route
+         * 
+         * dynamic routes
          */
         $routes = $this->router->getRoutes();
+        $ignoredRoutes = array_merge(['top', 'site'], $this->ignoredRoutes);
+        
         foreach ($routes as $routeName => $route) {
             if (in_array($routeName, $ignoredRoutes)) {
                 continue;
             }
 
-            // The original route config is not available directly. So the cast
-            // to array allows to access to it: protected keys start with "0*0".
+            /**
+             * The original route config is not available directly. So the cast
+             * to array allows to access to it: protected keys start with "0*0".
+             */
             $routeArray = [];
             foreach ((array) $route as $k => $v) {
                 $routeArray[substr($k, 3)] = $v;
@@ -285,12 +320,16 @@ class DomainMapper
              */
             $routePath = '';
             if (isset($routeArray['parts'])) {
-                // The method assemble() is not available, because the site slug
-                // is missing.
+                /**
+                 * The method assemble() is not available, because the site slug 
+                 * is missing.
+                 */
                 foreach ($routeArray['parts'] as $part) {
                     list($type, $path) = $part;
-                    // The module Scripto use another route format, at top
-                    // level, but with optional site slug.
+                    /** 
+                     * The module Scripto use another route format, at top
+                     * level, but with optional site slug.
+                     */
                     if ($type === 'optional') {
                         $optionalParts = $path;
                         foreach ($optionalParts as $optionalPart) {
