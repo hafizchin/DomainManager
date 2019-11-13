@@ -64,10 +64,10 @@ class DomainSiteMapping extends \DomainManager\Entity\DomainSiteMapping implemen
     public function __sleep()
     {
         if ($this->__isInitialized__) {
-            return ['__isInitialized__', 'id', 'site_id', 'domain', 'site_page_id'];
+            return ['__isInitialized__', 'id', 'site_id', 'domain'];
         }
 
-        return ['__isInitialized__', 'id', 'site_id', 'domain', 'site_page_id'];
+        return ['__isInitialized__', 'id', 'site_id', 'domain'];
     }
 
     /**
@@ -241,17 +241,6 @@ class DomainSiteMapping extends \DomainManager\Entity\DomainSiteMapping implemen
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'setDomain', [$domain]);
 
         return parent::setDomain($domain);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function setSitePageId($site_page_id)
-    {
-
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setSitePageId', [$site_page_id]);
-
-        return parent::setSitePageId($site_page_id);
     }
 
     /**
