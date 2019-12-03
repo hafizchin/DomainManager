@@ -115,7 +115,12 @@ class DomainMapper
         return ltrim("{$this->siteIndicator}{$this->siteSlug}", '/');
     }
 
-    private function routeTemplate()
+    /**
+     * @var \Zend\Router\PriorityList $routes
+     * @var \Zend\Router\RouteInterface $route
+     * 
+     */
+    private function routeTemplate($routes)
     {
         $routeKey = "{$this->siteSlug}-routes";
 
@@ -292,15 +297,13 @@ class DomainMapper
             }
         }
 
+        $ignoredRoutes = array_merge(['top', 'site'], $this->ignoredRoutes);
+
         /**
          * @var \Zend\Router\PriorityList $routes
          * @var \Zend\Router\RouteInterface $route
          * 
-         * dynamic routes
          */
-        $routes = $this->router->getRoutes();
-        $ignoredRoutes = array_merge(['top', 'site'], $this->ignoredRoutes);
-        
         foreach ($routes as $routeName => $route) {
             if (in_array($routeName, $ignoredRoutes)) {
                 continue;
@@ -352,20 +355,19 @@ class DomainMapper
                 }
             }
 
-            $newRoute = [
-                'type' => get_class($route),
-            ];
-
             if (strlen($routePath)) {
+                $newRoute = [
+                    'type' => get_class($route),
+                ];
                 $newRoute['options']['route'] = substr($routePath, 1);
-            }
 
-            if (isset($routeArray['defaults'])) {
-                $routeArray['defaults']['site-slug'] = $this->siteSlug;
-                $newRoute['options']['defaults'] = $routeArray['defaults'];
-            }
+                if (isset($routeArray['defaults'])) {
+                    $routeArray['defaults']['site-slug'] = $this->siteSlug;
+                    $newRoute['options']['defaults'] = $routeArray['defaults'];
+                }
 
-            $mappedRoutes[$routeKey]['child_routes'][$routeName] = $newRoute;
+                $mappedRoutes[$routeKey]['child_routes'][$routeName] = $newRoute;
+            }
         }
 
         return $mappedRoutes;
@@ -430,12 +432,19 @@ class DomainMapper
         $controller->plugin('redirect')->toUrl($url);
     }
 
-    private function createRoute()
+    public function createRoute($routes = null)
     {
-        if ($this->router->hasRoute($this->siteSlug) === false) {
-            $this->routes[$this->siteSlug] = $this->routeTemplate();
-            $this->router->addRoutes($this->routes[$this->siteSlug]);
+        if ($this->isIgnoredRoute()) {
+            return;
         }
+        
+        if($this->router->hasRoute($this->siteSlug)) {
+            $this->router->removeRoute($this->siteSlug);
+        }
+        
+        $routes = is_null($routes) ? $this->router->getRoutes() : $routes;
+        $this->routes[$this->siteSlug] = $this->routeTemplate($routes);
+        $this->router->addRoutes($this->routes[$this->siteSlug]);
 
         if (substr($this->url, 0, 3) == $this->siteIndicator) {
             $this->redirectUrl = trim(preg_replace("#{$this->siteIndicator}|{$this->siteSlug}#", '', $this->url), '/');
@@ -445,7 +454,6 @@ class DomainMapper
         $routeMatch = $this->router->match($this->event->getRequest());
 
         if (!is_null($routeMatch)) {
-            // $routeName = $routeMatch->getMatchedRouteName();
             $doRedirect = false;
 
             /**
@@ -540,9 +548,7 @@ class DomainMapper
         $this->initRoutingVariables();
 
         if (!$this->isIgnoredRoute()) {
-            if ($this->isPluginConfigured()) {
-                $this->createRoute();
-            } else {
+            if (!$this->isPluginConfigured()) {
                 $renderer = $this->event->getApplication()->getServiceManager()->get('ViewPhpRenderer');
                 $view = new ViewModel();
                 $data = ['domain' => $this->domain];
