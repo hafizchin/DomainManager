@@ -5,6 +5,9 @@ namespace DomainManager;
 use DomainManager\Api\DomainMapper;
 use Omeka\Module\AbstractModule;
 use Zend\Mvc\MvcEvent;
+
+use Zend\ModuleManager\ModuleManager;
+
 use Zend\ServiceManager\ServiceLocatorInterface;
 use Zend\Mvc\Controller\AbstractController;
 use Zend\View\Renderer\PhpRenderer;
@@ -12,6 +15,22 @@ use Zend\View\Renderer\PhpRenderer;
 class Module extends AbstractModule
 {
     private $domainMapper;
+
+    /**
+     * modules are loaded alphabetical in ascending order, which means
+     * modules that are lexicographically greater than this module will not be mapped.
+     * 
+     * in order for us to map dynamically created routes, we must then listen to
+     * the route event and then generate the route based on that context
+     */
+    public function init(ModuleManager $manager)
+    {
+        $eventManager = $manager->getEventManager();
+        $sharedEventManager = $eventManager->getSharedManager();
+        $sharedEventManager->attach('Zend\Mvc\Application', MvcEvent::EVENT_ROUTE, function(MvcEvent $event) {
+            $this->domainMapper->createRoute($event->getRouter()->getRoutes());
+        }, 100);
+    }
 
     public function onBootstrap(MvcEvent $event)
     {
