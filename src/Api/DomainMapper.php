@@ -122,8 +122,8 @@ class DomainMapper
      */
     private function routeTemplate($routes)
     {
-        $routeKey = "{$this->siteSlug}-routes";
-
+        $routeKey = "site";
+        
         /**
          * default route options
          */
