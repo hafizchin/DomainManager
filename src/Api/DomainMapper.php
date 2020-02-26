@@ -50,6 +50,7 @@ class DomainMapper
     private $siteId;
     private $redirectUrl;
     private $defaultPage;
+    private $defaultPageUrl;
 
     private $errors;
 
@@ -98,6 +99,11 @@ class DomainMapper
             ->getArrayResult();
 
         return count($isSitePrivate) > 0 ? (bool) $isSitePrivate[0]['isPublic'] : null;
+    }
+
+    private function isIndexPage()
+    {
+        return $this->url == "/";
     }
 
     private function isDefaultPageRoute()
@@ -163,8 +169,12 @@ class DomainMapper
                 'action' => 'show',
                 'site-slug' => $this->siteSlug,
                 'page-slug' => $this->defaultPage,
-            ];
+            ];        
         }
+
+        $controller = strtolower($rootRouteDefaults["controller"]);
+        $action     = strtolower($rootRouteDefaults["page-slug"] ?: $rootRouteDefaults["action"]);
+        $this->defaultPageUrl =  $controller . DIRECTORY_SEPARATOR . $action;
 
         /**
          * the controller must be atleast 3 characters long so we don't match the site route ("/s/")
@@ -465,9 +475,9 @@ class DomainMapper
                 $doRedirect = true;
             }
 
-            if ($this->isDefaultPageRoute()) {
+            if($this->isIndexPage() || $this->isDefaultPageRoute()) {
                 $doRedirect = true;
-                $this->redirectUrl = '/';
+                $this->redirectUrl = $this->defaultPageUrl;
             }
 
             /*
