@@ -12,9 +12,45 @@ use Zend\ServiceManager\ServiceLocatorInterface;
 use Zend\Mvc\Controller\AbstractController;
 use Zend\View\Renderer\PhpRenderer;
 
+use Omeka\Stdlib\Message;
+use Omeka\Module\Exception\ModuleCannotInstallException;
+
 class Module extends AbstractModule
 {
     private $domainMapper;
+
+    private function checkDependencies()
+    {
+        //read all the dependencies
+        $reader = new \Zend\Config\Reader\Ini();
+        $data   = $reader->fromFile( __DIR__.'/config/module.ini');
+        $dependencies = array();
+
+        if(isset($data["info"]["dependencies"])) {
+            $dependencies = explode(",", $data["info"]["dependencies"]);
+        }
+
+        if(count($dependencies)) {
+            $serviceLocator = $this->getServiceLocator();
+            $moduleManager = $serviceLocator->get('Omeka\ModuleManager');
+            
+            foreach($dependencies as $dependency) {
+                $module = $moduleManager->getModule($dependency);
+                if($module && $module->getState() === \Omeka\Module\Manager::STATE_ACTIVE) {
+                    unset($dependencies[array_search($dependency, $dependencies)]);
+                }
+            }
+
+            if(count($dependencies)) {
+                $translator = $serviceLocator->get('MvcTranslator');
+                $message = new Message(
+                    $translator->translate('This module requires module "%s".'), // @translate
+                    implode(", ", $dependencies)
+                );
+                throw new ModuleCannotInstallException($message);
+            }
+        }
+    }
 
     /**
      * modules are loaded alphabetical in ascending order, which means
@@ -56,6 +92,7 @@ class Module extends AbstractModule
 
     public function install(ServiceLocatorInterface $serviceLocator)
     {
+        $this->checkDependencies();
         $connection = $serviceLocator->get('Omeka\Connection');
         $sql = '
             CREATE TABLE `domain_site_mapping` (
