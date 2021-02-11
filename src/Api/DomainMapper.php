@@ -615,16 +615,18 @@ class DomainMapper
 
     public function init()
     {
-        $this->initRoutingVariables();
+        if(php_sapi_name() !== 'cli') {
+            $this->initRoutingVariables();
 
-        if (!$this->isIgnoredRoute()) {
-            if (!$this->isPluginConfigured()) {
-                $renderer = $this->event->getApplication()->getServiceManager()->get('ViewPhpRenderer');
-                $view = new ViewModel();
-                $data = ['domain' => $this->domain];
-                $view->setTemplate('domain_not_configured');
-                $view->setVariables($data);
-                die($renderer->render($view));
+            if (!$this->isIgnoredRoute()) {
+                if (!$this->isPluginConfigured()) {
+                    $renderer = $this->event->getApplication()->getServiceManager()->get('ViewPhpRenderer');
+                    $view = new ViewModel();
+                    $data = ['domain' => $this->domain];
+                    $view->setTemplate('domain_not_configured');
+                    $view->setVariables($data);
+                    die($renderer->render($view));
+                }
             }
         }
     }
