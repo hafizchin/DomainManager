@@ -2,55 +2,19 @@
 
 namespace DomainManager;
 
-use DomainManager\Api\DomainMapper;
+use Laminas\Mvc\MvcEvent;
+use Laminas\ModuleManager\ModuleManager;
+use Laminas\ServiceManager\ServiceLocatorInterface;
+use Laminas\Mvc\Controller\AbstractController;
+use Laminas\View\Renderer\PhpRenderer;
 use Omeka\Module\AbstractModule;
-use Zend\Mvc\MvcEvent;
-
-use Zend\ModuleManager\ModuleManager;
-
-use Zend\ServiceManager\ServiceLocatorInterface;
-use Zend\Mvc\Controller\AbstractController;
-use Zend\View\Renderer\PhpRenderer;
-
 use Omeka\Stdlib\Message;
 use Omeka\Module\Exception\ModuleCannotInstallException;
+use DomainManager\Api\DomainMapper;
 
 class Module extends AbstractModule
 {
     private $domainMapper;
-
-    private function checkDependencies()
-    {
-        //read all the dependencies
-        $reader = new \Zend\Config\Reader\Ini();
-        $data   = $reader->fromFile( __DIR__.'/config/module.ini');
-        $dependencies = array();
-
-        if(isset($data["info"]["dependencies"])) {
-            $dependencies = explode(",", $data["info"]["dependencies"]);
-        }
-
-        if(count($dependencies)) {
-            $serviceLocator = $this->getServiceLocator();
-            $moduleManager = $serviceLocator->get('Omeka\ModuleManager');
-            
-            foreach($dependencies as $dependency) {
-                $module = $moduleManager->getModule($dependency);
-                if($module && $module->getState() === \Omeka\Module\Manager::STATE_ACTIVE) {
-                    unset($dependencies[array_search($dependency, $dependencies)]);
-                }
-            }
-
-            if(count($dependencies)) {
-                $translator = $serviceLocator->get('MvcTranslator');
-                $message = new Message(
-                    $translator->translate('This module requires module "%s".'), // @translate
-                    implode(", ", $dependencies)
-                );
-                throw new ModuleCannotInstallException($message);
-            }
-        }
-    }
 
     /**
      * modules are loaded alphabetical in ascending order, which means
@@ -63,7 +27,7 @@ class Module extends AbstractModule
     {
         $eventManager = $manager->getEventManager();
         $sharedEventManager = $eventManager->getSharedManager();
-        $sharedEventManager->attach('Zend\Mvc\Application', MvcEvent::EVENT_ROUTE, function(MvcEvent $event) {
+        $sharedEventManager->attach('Laminas\Mvc\Application', MvcEvent::EVENT_ROUTE, function(MvcEvent $event) {
             $this->domainMapper->createRoute($event->getRouter()->getRoutes());
         }, 100);
     }
@@ -92,7 +56,6 @@ class Module extends AbstractModule
 
     public function install(ServiceLocatorInterface $serviceLocator)
     {
-        $this->checkDependencies();
         $connection = $serviceLocator->get('Omeka\Connection');
         $sql = '
             CREATE TABLE `domain_site_mapping` (

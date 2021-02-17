@@ -50,43 +50,42 @@ The default page is managed by the navigation menu of the site.
         <?php endforeach?>
     </ul>
 <?php endif?>
-<form>
-    <table>
-        <thead>
+<table>
+    <thead>
+        <tr>
+            <th>Site</th>
+            <th>Domain</th>
+        </th>
+    </thead>
+    <tbody>
+        <?php foreach($this->mappings as $index => $mapping):?>
+            <?php
+                $mapping_id = $mapping["mapping_id"];
+                $site_id    = $mapping["site_id"];
+            ?>
             <tr>
-                <th>Site</th>
-                <th>Domain</th>
-            </th>
-        </thead>
-        <tbody>
-            <?php foreach($this->mappings as $index => $mapping):?>
-                <?php
-                    $mapping_id = $mapping["mapping_id"];
-                    $site_id    = $mapping["site_id"];
-                ?>
-                <tr>
-                    <td><?=$mapping["site_title"]?></td>
-                    <td>
-                        <input name="mapping_id[]" type="hidden" value="<?=is_null($mapping_id) ? 0 : $mapping_id?>">
-                        <input name="site_id[]" type="hidden" value="<?=$site_id?>">
-                        <div class="inputs">
-                            <?php
-                                if(isset($this->errors[$index]))
-                                {
-                                    $domain = $this->errors[$index]["error_value"];
-                                    $class  = 'class="error"';
-                                }
-                                else
-                                {
-                                    $domain = $mapping["domain"];
-                                    $class  = "";
-                                }
-                            ?>
-                            <input name="domain[]" type="text" autocomplete="off" value="<?=$domain?>" <?=$class?>>
-                        </div>
-                    </td>
-                </tr>
-            <?php endforeach?>
-        <tbody>
-    </table>
-</form>
+                <td><?=$mapping["site_title"]?></td>
+                <td>
+                    <input name="mapping_id[]" type="hidden" value="<?=is_null($mapping_id) ? 0 : $mapping_id?>">
+                    <input name="site_id[]" type="hidden" value="<?=$site_id?>">
+                    <div class="inputs">
+                        <?php
+                            if(isset($this->errors[$index]))
+                            {
+                                $domain = $this->errors[$index]["error_value"];
+                                $class  = 'class="error"';
+                            }
+                            else
+                            {
+                                $domain = $mapping["domain"];
+                                $class  = "";
+                            }
+                        ?>
+                        <input name="domain[]" type="text" autocomplete="off" value="<?=$domain?>" <?=$class?>>
+                    </div>
+                </td>
+            </tr>
+        <?php endforeach?>
+    <tbody>
+</table>
+

@@ -16,10 +16,4 @@ return [
             'domain_not_configured' => __DIR__ . '/../view/domain_not_configured.phtml',
         ],
     ],
-    'view_helpers' => [
-        'invokables' => [
-            'url' => View\Helper\DomainManagerUrl::class,
-            'Url' => View\Helper\DomainManagerUrl::class,
-        ]
-    ],
 ];
