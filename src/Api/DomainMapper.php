@@ -73,11 +73,13 @@ class DomainMapper
         $domain = $this->entityManager->createQueryBuilder()
             ->select('m.domain')
             ->from('DomainManager\Entity\DomainSiteMapping', 'm')
+            ->leftJoin('Omeka\Entity\Site', 's', \Doctrine\ORM\Query\Expr\Join::WITH, 'm.site_id = s.id')
             ->where('m.domain = ?1')
+            ->orWhere("s.slug = ?2")
             ->setParameter(1, $this->domain)
+            ->setParameter(2, $this->siteSlug)
             ->getQuery()
             ->getArrayResult();
-
         return count($domain) > 0 ? !is_null($domain[0]['domain']) : false;
     }
 
@@ -433,7 +435,9 @@ class DomainMapper
                 ->from('DomainManager\Entity\DomainSiteMapping', 'm')
                 ->leftJoin('Omeka\Entity\Site', 's', \Doctrine\ORM\Query\Expr\Join::WITH, 'm.site_id = s.id')
                 ->where('m.domain = ?1')
+                ->orWhere("s.slug = ?2")
                 ->setParameter(1, $this->domain)
+                ->setParameter(2, $this->siteSlug)
                 ->getQuery()
                 ->getArrayResult();
             return count($site) > 0 ? $site[0]['id'] : null;
@@ -447,12 +451,15 @@ class DomainMapper
             return $slug[0];
         }
         else {
+            $slugFromUrl = preg_replace("#{$this->siteIndicator}#", "", $this->url);
             $slug = $this->entityManager->createQueryBuilder()
                 ->select('s.slug')
                 ->from('DomainManager\Entity\DomainSiteMapping', 'm')
                 ->leftJoin('Omeka\Entity\Site', 's', \Doctrine\ORM\Query\Expr\Join::WITH, 'm.site_id = s.id')
                 ->where('m.domain = ?1')
+                ->orWhere("s.slug = ?2")
                 ->setParameter(1, $this->domain)
+                ->setParameter(2, $slugFromUrl)
                 ->getQuery()
                 ->getArrayResult();
             return count($slug) > 0 ? $slug[0]['slug'] : null;
@@ -499,7 +506,7 @@ class DomainMapper
     public function createRoute($routes = null)
     {
         $domain = $this->getDomain();
-
+        
         if ($this->isIgnoredRoute() || is_null($domain)) {
             return;
         }
@@ -570,6 +577,8 @@ class DomainMapper
             );
             */
 
+            $this->redirectUrl = $domain . "/". $this->redirectUrl;
+            
             if(strlen($this->redirectUrl) && $doRedirect) {
                 header("Location: {$this->redirectUrl}");
                 exit();
