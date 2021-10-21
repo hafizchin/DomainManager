@@ -556,28 +556,12 @@ class DomainMapper
                 $this->redirectUrl = $this->redirectUrl . '?' . $this->query;
             }
             
-            /*
-            $this->event->getApplication()->getEventManager()->getSharedManager()->attach(
-                'Zend\Mvc\Controller\AbstractActionController',
-                'dispatch',
-                function ($event) use ($doRedirect) {
-                    if(strlen($this->redirectUrl) && $doRedirect) {
-                        $controller = $event->getTarget();
-                        return $this->redirect($controller, $this->redirectUrl);
-                        
-                        #$event->stopPropagation();
-                        #$response = $event->getResponse();
-                        #$response->getHeaders()->addHeaderLine("Refresh:0; url={$this->redirectUrl}");
-                        #$response->getHeaders()->addHeaderLine("Location: {$this->redirectUrl}");
-                        #$response->setStatusCode(302);
-                        #return $response;
-                    }
-                },
-                100
-            );
-            */
-
-            $this->redirectUrl = $domain . "/". $this->redirectUrl;
+            /**
+             * ensure we append the domain
+             */
+            if(!preg_match("#{$domain}#", $this->redirectUrl)) {
+                $this->redirectUrl = $domain . "/". $this->redirectUrl;
+            }
             
             if(strlen($this->redirectUrl) && $doRedirect) {
                 header("Location: {$this->redirectUrl}");
